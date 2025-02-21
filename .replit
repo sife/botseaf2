@@ -45,7 +45,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python test_bot.py"
+args = "python3 test_bot.py"
 
 [deployment]
 run = ["sh", "-c", "python bot.py"]

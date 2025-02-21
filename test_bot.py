@@ -3,6 +3,7 @@ from datetime import datetime
 import pytz
 from bot import EconomicCalendarBot
 from formatter import format_notification_message
+from scraper import EconomicCalendarScraper
 
 async def test_bot_notification():
     try:
@@ -10,22 +11,29 @@ async def test_bot_notification():
         bot = EconomicCalendarBot()
         await bot.initialize()
 
-        # Create a test event with current time
-        current_time = datetime.now(pytz.timezone('Asia/Riyadh'))
-        test_event = {
-            'name': 'اختبار البوت - مؤشر أسعار المستهلك الأمريكي',
-            'time': current_time,
-            'impact': 'قوي',
-            'previous': '3.4%',
-            'forecast': '3.0%'
-        }
+        # Get the first real event
+        print("Fetching calendar data...")
+        scraper = EconomicCalendarScraper()
+        events = scraper.get_calendar_data()
 
-        # Test notification format
-        message = format_notification_message(test_event)
-        print("\nSending test notification with new format:")
-        print(message)
-        await bot.send_notification(message)
-        print("Test message sent successfully")
+        if events:
+            first_event = events[0]
+            print("\nSending notification for first event:")
+            print(f"Event: {first_event['name']}")
+            print(f"Time: {first_event['time']}")
+            print(f"Impact: {first_event['impact']}")
+            print(f"Previous: {first_event['previous']}")
+            print(f"Forecast: {first_event['forecast']}")
+
+            # Format and send notification
+            message = format_notification_message(first_event)
+            print("\nFormatted message:")
+            print(message)
+            print("\nSending notification to channel...")
+            await bot.send_notification(message)
+            print("Test message sent successfully")
+        else:
+            print("No events found to test")
 
     except Exception as e:
         print(f"Error testing bot: {e}")

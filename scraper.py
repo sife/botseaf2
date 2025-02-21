@@ -30,6 +30,13 @@ class EconomicCalendarScraper:
                     if not us_flag:
                         continue
 
+                    # Get impact level first
+                    impact = self._get_impact_level(row)
+
+                    # Skip events with weak impact
+                    if impact == "ضعيف":
+                        continue
+
                     # Extract event details
                     time_cell = row.find('td', {'class': 'time'})
                     event_cell = row.find('td', {'class': 'event'})
@@ -67,7 +74,6 @@ class EconomicCalendarScraper:
                         continue
 
                     event_name = event_cell.text.strip()
-                    impact = self._get_impact_level(row)
 
                     # Get previous and forecast values
                     prev_cell = row.find('td', {'class': 'prev'})
@@ -83,12 +89,12 @@ class EconomicCalendarScraper:
                         'previous': previous,
                         'forecast': forecast
                     })
-                    print(f"Added US event: {event_name} at {event_time}")
+                    print(f"Added US event: {event_name} at {event_time} (Impact: {impact})")
                 except Exception as e:
                     print(f"Error processing row: {str(e)}")
                     continue
 
-            print(f"Successfully found {len(events)} US events")
+            print(f"Successfully found {len(events)} US events with medium/high impact")
             return events
 
         except Exception as e:

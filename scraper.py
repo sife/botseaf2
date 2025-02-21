@@ -17,26 +17,16 @@ class EconomicCalendarScraper:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # Find the economic calendar table
-            calendar_table = soup.find('table', {'id': 'economicCalendarData'})
-            if not calendar_table:
-                print("Calendar table not found")
-                return []
-
-            events = []
-            table_body = calendar_table.find('tbody')
-            if not table_body:
-                print("Table body not found")
-                return []
-
-            rows = table_body.find_all('tr', {'class': 'js-event-item'})
+            # Find all event rows
+            rows = soup.find_all('tr', {'class': 'js-event-item'})
             print(f"Found {len(rows)} total events, filtering for US events...")
 
+            events = []
             for row in rows:
                 try:
-                    # Check if it's a US event
-                    country_cell = row.find('td', {'class': 'flagCur'})
-                    if not country_cell or 'الولايات المتحدة' not in country_cell.text.strip():
+                    # Check if it's a US event by looking for the US flag span
+                    us_flag = row.find('span', {'class': 'ceFlags United_States'})
+                    if not us_flag:
                         continue
 
                     # Extract event details
@@ -51,13 +41,14 @@ class EconomicCalendarScraper:
                     impact = self._get_impact_level(row)
 
                     # Get previous and forecast values
-                    value_cells = row.find_all('td', {'class': 'bold'})
-                    previous = value_cells[0].text.strip() if len(value_cells) > 0 else "غير متوفر"
-                    forecast = value_cells[1].text.strip() if len(value_cells) > 1 else "غير متوفر"
+                    prev_cell = row.find('td', {'class': 'prev'})
+                    forecast_cell = row.find('td', {'class': 'fore'})
+
+                    previous = prev_cell.text.strip() if prev_cell else "غير متوفر"
+                    forecast = forecast_cell.text.strip() if forecast_cell else "غير متوفر"
 
                     # Convert time to datetime
                     event_time = self._parse_time(time)
-
                     if event_time:
                         events.append({
                             'time': event_time,
@@ -68,14 +59,14 @@ class EconomicCalendarScraper:
                         })
                         print(f"Added US event: {event_name} at {event_time}")
                 except Exception as e:
-                    print(f"Error processing row: {e}")
+                    print(f"Error processing row: {str(e)}")
                     continue
 
             print(f"Successfully found {len(events)} US events")
             return events
 
         except Exception as e:
-            print(f"Error scraping calendar data: {e}")
+            print(f"Error scraping calendar data: {str(e)}")
             return []
 
     def _get_impact_level(self, row):
@@ -84,8 +75,8 @@ class EconomicCalendarScraper:
             if not impact_cell:
                 return "ضعيف"
 
-            impact_bull = impact_cell.find_all('i', {'class': 'grayFullBull'})
-            num_bulls = len(impact_bull) if impact_bull else 0
+            impact_bulls = impact_cell.find_all('i', {'class': 'grayFullBullishIcon'})
+            num_bulls = len(impact_bulls) if impact_bulls else 0
 
             if num_bulls <= 1:
                 return "ضعيف"

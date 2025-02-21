@@ -7,54 +7,47 @@ from scraper import EconomicCalendarScraper
 
 async def test_bot_notification():
     try:
-        print("Initializing test bot...")
+        print("\nبدء اختبار إرسال الإشعارات...")
         bot = EconomicCalendarBot()
         await bot.initialize()
 
-        # Get the first real event
-        print("Fetching calendar data...")
+        # Get all events
+        print("جاري جلب بيانات التقويم الاقتصادي...")
         scraper = EconomicCalendarScraper()
         events = scraper.get_calendar_data()
 
         if events:
-            first_event = events[0]
-            print("\nSending notification for first event:")
-            print(f"Event: {first_event['name']}")
-            print(f"Time: {first_event['time']}")
-            print(f"Impact: {first_event['impact']}")
-            print(f"Previous: {first_event['previous']}")
-            print(f"Forecast: {first_event['forecast']}")
+            print("\nالأحداث المجدولة لليوم:")
+            for idx, event in enumerate(events, 1):
+                print(f"\nالحدث {idx}:")
+                print(f"الاسم: {event['name']}")
+                print(f"الوقت: {event['time']}")
+                print(f"التأثير: {event['impact']}")
+                print(f"السابق: {event['previous']}")
+                print(f"التوقع: {event['forecast']}")
 
-            # Format and send notification
-            message = format_notification_message(first_event)
-            print("\nFormatted message:")
-            print(message)
-            print("\nSending notification to channel...")
-            await bot.send_notification(message)
-            print("Test message sent successfully")
+                # Send notification for each event
+                message = format_notification_message(event)
+                print(f"\nإرسال إشعار للحدث {idx}...")
+                await bot.send_notification(message)
+                print("تم إرسال الإشعار بنجاح")
+
+                # Add a small delay between messages
+                await asyncio.sleep(2)
         else:
-            print("No events found to test")
+            print("لم يتم العثور على أحداث للاختبار")
 
     except Exception as e:
-        print(f"Error testing bot: {e}")
+        print(f"خطأ في اختبار البوت: {e}")
     finally:
-        print("Starting test cleanup...")
-        if 'bot' in locals():
-            if bot.scheduler:
-                print("Shutting down scheduler...")
-                bot.scheduler.shutdown()
-            if bot.application:
-                print("Stopping application...")
-                await bot.application.stop()
-                print("Shutting down application...")
-                await bot.application.shutdown()
-                print("Application shutdown completed")
-        print("Test cleanup completed")
+        if 'bot' in locals() and bot:
+            await bot.cleanup()
+            print("تم إنهاء الاختبار")
 
 if __name__ == "__main__":
     try:
         asyncio.run(test_bot_notification())
     except KeyboardInterrupt:
-        print("\nTest interrupted by user")
+        print("\nتم إيقاف الاختبار بواسطة المستخدم")
     except Exception as e:
-        print(f"Test error: {e}")
+        print(f"خطأ: {e}")

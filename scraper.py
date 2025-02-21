@@ -102,13 +102,21 @@ class EconomicCalendarScraper:
             return []
 
     def _get_impact_level(self, row):
+        """
+        Get the impact level of an event.
+        Returns: "ضعيف", "متوسط", or "قوي" based on the number of bulls
+        """
         try:
             impact_cell = row.find('td', {'class': 'sentiment'})
             if not impact_cell:
                 return "ضعيف"
 
-            impact_bulls = impact_cell.find_all('i', {'class': 'grayFullBullishIcon'})
-            num_bulls = len(impact_bulls) if impact_bulls else 0
+            # Look for both gray and orange bulls
+            gray_bulls = impact_cell.find_all('i', {'class': 'grayFullBullishIcon'})
+            orange_bulls = impact_cell.find_all('i', {'class': 'orangeFullBullishIcon'})
+
+            # Total number of bulls (either color)
+            num_bulls = len(gray_bulls) + len(orange_bulls)
 
             if num_bulls <= 1:
                 return "ضعيف"
@@ -116,8 +124,9 @@ class EconomicCalendarScraper:
                 return "متوسط"
             else:
                 return "قوي"
-        except:
-            return "ضعيف"
+        except Exception as e:
+            print(f"Error determining impact level: {str(e)}")
+            return "ضعيف"  # Default to weak impact on error
 
     def _parse_time(self, time_str):
         """Parse time string and return a timezone-aware datetime object"""

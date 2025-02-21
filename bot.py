@@ -24,29 +24,60 @@ class EconomicCalendarBot:
     async def initialize(self):
         """Initialize bot and scheduler"""
         try:
+            print("Initializing bot application...")
             self.application = Application.builder().token(self.token).build()
+
+            print("Starting bot application...")
             await self.application.initialize()
             await self.application.start()
 
+            print("Initializing scheduler...")
             self.scheduler = EventScheduler(self)
             self.scheduler.start()
 
             print("Bot initialized successfully")
         except Exception as e:
             print(f"Error initializing bot: {e}")
-            if self.application:
-                await self.application.shutdown()
+            await self.cleanup()
             raise e
+
+    async def cleanup(self):
+        """Clean up resources"""
+        print("Starting cleanup process...")
+        if self.scheduler:
+            print("Shutting down scheduler...")
+            self.scheduler.shutdown()
+
+        if self.application:
+            try:
+                print("Stopping application...")
+                await self.application.stop()
+                print("Shutting down application...")
+                await self.application.shutdown()
+                print("Application shutdown complete")
+            except Exception as e:
+                print(f"Error during application shutdown: {e}")
+        print("Cleanup process completed")
 
     async def run(self):
         """Start the bot"""
         try:
             await self.initialize()
             print("Bot is running...")
-            await self.application.run_polling(drop_pending_updates=True)
+
+            # Create a future that will never complete unless cancelled
+            stop_future = asyncio.get_running_loop().create_future()
+
+            try:
+                # Wait for the future to complete (which it won't unless cancelled)
+                await stop_future
+            except asyncio.CancelledError:
+                print("Received stop signal")
+
         except Exception as e:
             print(f"Error running bot: {e}")
-            raise e
+        finally:
+            await self.cleanup()
 
 async def main():
     """Main entry point"""
@@ -55,14 +86,15 @@ async def main():
         bot = EconomicCalendarBot()
         await bot.run()
     except KeyboardInterrupt:
-        print("Bot stopped by user")
+        print("\nBot stopped by user")
     except Exception as e:
         print(f"Fatal error: {e}")
     finally:
-        if bot and bot.scheduler:
-            bot.scheduler.shutdown()
-        if bot and bot.application:
-            await bot.application.shutdown()
+        if bot:
+            await bot.cleanup()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nProcess interrupted by user")

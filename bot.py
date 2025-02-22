@@ -2,11 +2,13 @@ import asyncio
 from telegram.ext import Application
 from config import BOT_TOKEN, CHANNEL_ID
 from scheduler import EventScheduler
+import os
 
 class EconomicCalendarBot:
     def __init__(self):
-        self.token = BOT_TOKEN
-        self.channel_id = CHANNEL_ID
+        # Get environment variables with fallback to config values
+        self.token = os.getenv('BOT_TOKEN', BOT_TOKEN)
+        self.channel_id = os.getenv('CHANNEL_ID', CHANNEL_ID)
         self.application = None
         self.scheduler = None
 

@@ -1,6 +1,12 @@
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
 # Telegram Configuration
-BOT_TOKEN = "7712506538:AAHgFTEg7_fuhq0sTN2dwZ88UFV1iQ6ycQ4"
-CHANNEL_ID = "@testbotseaf"
+BOT_TOKEN = os.getenv('BOT_TOKEN', "7712506538:AAHgFTEg7_fuhq0sTN2dwZ88UFV1iQ6ycQ4")
+CHANNEL_ID = os.getenv('CHANNEL_ID', "@testbotseaf")
 
 # investing.com URL
 CALENDAR_URL = "https://sa.investing.com/economic-calendar"

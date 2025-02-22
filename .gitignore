@@ -41,7 +41,7 @@ Thumbs.db
 # Logs
 *.log
 
-# Replit specific
+# Replit specific (these should not be deployed)
 .replit
 replit.nix
 poetry.lock
